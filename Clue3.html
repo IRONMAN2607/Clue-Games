@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Surprise! - Clue 3</title>
+    <style>
+        /* ... existing styles ... */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background-color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #mobile-wrapper {
+            width: 100%;
+            max-width: 390px;
+            height: 100%;
+            max-height: 844px;
+            background-color: #f0f8ff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        @media (max-width: 450px) {
+
+            body,
+            html {
+                background-color: #f0f8ff;
+            }
+
+            #mobile-wrapper {
+                max-width: 100%;
+                max-height: 100%;
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        /* Dim Overlay */
+        #dim-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            z-index: 50;
+        }
+
+        #dim-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+            /* Catch clicks to dismiss */
+        }
+
+        #start-btn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            transition: all 2s ease-in-out;
+        }
+
+        #start-btn:active {
+            transform: scale(0.95);
+        }
+
+        #start-btn.vanish {
+            transform: translateX(120vw) rotate(360deg);
+            /* Roll out */
+            opacity: 0;
+        }
+
+        /* Container for cards */
+        #card-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            pointer-events: none;
+        }
+
+        /* The Card Component */
+        .bd-card {
+            width: 45%;
+            aspect-ratio: 3/4;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            /* Slower, smoother easing */
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 0;
+            /* Base level */
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s ease;
+            /* Match parent speed */
+            transform-style: preserve-3d;
+        }
+
+        .bd-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        /* Focused State (Enlarged) */
+        #card-container .bd-card.focused {
+            z-index: 100 !important;
+            /* Above overlay (50), while others are 0 */
+            width: 85% !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            animation: none !important;
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-front {
+            background-color: white;
+        }
+
+        .card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-back {
+            background-color: white;
+            transform: rotateY(180deg);
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            color: #333;
+            border: 5px solid #ff6f61;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .riddle-text {
+            font-size: 1.4rem;
+            /* Slightly larger */
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Wandering Animations */
+        .wandering .bd-card:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation: float1 5s ease-in-out forwards;
+        }
+
+        .wandering .bd-card:nth-child(2) {
+            top: 60%;
+            left: 50%;
+            animation: float2 5s ease-in-out forwards;
+        }
+
+        /* Entry Animation on Inner Card */
+        .wandering .card-inner {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Centered State (after wandering) */
+        .centered .bd-card {
+            transition: all 1s ease;
+            animation: none;
+            width: 40%;
+            top: 50% !important;
+            transform: translate(0, -50%);
+        }
+
+        .centered .bd-card:nth-child(1) {
+            left: 5% !important;
+        }
+
+        .centered .bd-card:nth-child(2) {
+            left: 55% !important;
+        }
+
+        @keyframes float1 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(80%, 50%) rotate(5deg);
+            }
+
+            50% {
+                transform: translate(20%, 150%) rotate(-5deg);
+            }
+
+            75% {
+                transform: translate(100%, 20%) rotate(3deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+
+        @keyframes float2 {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            25% {
+                transform: translate(-80%, -50%) rotate(-5deg);
+            }
+
+            50% {
+                transform: translate(10%, -100%) rotate(5deg);
+            }
+
+            75% {
+                transform: translate(-50%, -20%) rotate(-3deg);
+            }
+
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 101;
+            /* Above dimmed background */
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="mobile-wrapper">
+        <div id="dim-overlay"></div>
+        <button id="start-btn">Click Here!</button>
+
+        <div id="card-container">
+            <!-- Card 1 -->
+            <div class="bd-card">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <img src="./Assets/photo5.jpg" alt="Photo 5">
+                    </div>
+                    <div class="card-back">
+                        <p class="riddle-text">
+                            jaha hua tha bra ka scene <br>
+                            waha milega clue number teen
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bd-card">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <img src="./Assets/photo6.jpg" alt="Photo 6">
+                    </div>
+                    <div class="card-back">
+                        <p class="riddle-text">
+                            jaha hua tha bra ka scene <br>
+                            waha milega clue number teen
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const cardContainer = document.getElementById('card-container');
+        const cards = document.querySelectorAll('.bd-card');
+        const dimOverlay = document.getElementById('dim-overlay');
+        let isClickable = false;
+
+        startBtn.addEventListener('click', () => {
+            // Animate Button Vanish
+            startBtn.classList.add('vanish');
+
+            // Wait for button animation then start the show
+            setTimeout(() => {
+                startBtn.style.display = 'none';
+                cardContainer.style.display = 'block';
+
+                // Randomize spawn positions with constraints to prevent off-screen animations
+                // Card 1 (Moves Right/Down): Needs space on Right/Bottom
+                const c1Top = Math.floor(Math.random() * 35) + 5; // 5-40%
+                const c1Left = Math.floor(Math.random() * 35) + 5; // 5-40%
+                cards[0].style.top = c1Top + '%';
+                cards[0].style.left = c1Left + '%';
+
+                // Card 2 (Moves Left/Up): Needs space on Left/Top
+                const c2Top = Math.floor(Math.random() * 30) + 30; // 30-60%
+                const c2Left = Math.floor(Math.random() * 15) + 40; // 40-55%
+                cards[1].style.top = c2Top + '%';
+                cards[1].style.left = c2Left + '%';
+
+                cardContainer.classList.add('wandering');
+                setTimeout(() => {
+                    cardContainer.classList.remove('wandering');
+                    cardContainer.classList.add('centered');
+
+                    // Reset styles for clean centering
+                    cards.forEach(card => {
+                        card.style.top = '';
+                        card.style.left = '';
+                    });
+
+                    isClickable = true;
+                }, 5000);
+            }, 2000);
+        });
+
+        // Add Click Event to Cards
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!isClickable) return;
+                e.stopPropagation(); // Prevent bubbling
+
+                // If already focused, Flip it
+                if (card.classList.contains('focused')) {
+                    if (!card.classList.contains('flipped')) {
+                        card.classList.add('flipped');
+                        spawnConfetti();
+                    }
+                } else {
+                    // Not focused yet, so Focus it
+                    // Reset others
+                    cards.forEach(c => {
+                        c.classList.remove('focused');
+                        c.classList.remove('flipped');
+                    });
+
+                    // Activate Focus Mode
+                    dimOverlay.classList.add('active');
+                    card.classList.add('focused');
+
+                    // No auto-flip anymore
+                }
+            });
+        });
+
+        // Dismiss on clicking overlay
+        dimOverlay.addEventListener('click', () => {
+            dimOverlay.classList.remove('active');
+            cards.forEach(card => {
+                card.classList.remove('flipped');
+                setTimeout(() => {
+                    card.classList.remove('focused');
+                }, 400); // Wait for flip back before moving back
+            });
+        });
+
+        function spawnConfetti() {
+            const colors = ['#EF476F', '#FFD166', '#06D6A0', '#118AB2', '#073B4C'];
+            for (let i = 0; i < 50; i++) {
+                const div = document.createElement('div');
+                div.classList.add('confetti');
+                div.style.left = Math.random() * 100 + '%';
+                div.style.top = '-10px';
+                div.style.position = 'absolute';
+                div.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                div.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                document.getElementById('mobile-wrapper').appendChild(div);
+            }
+        }
+    </script>
+</body>
+
+</html>
