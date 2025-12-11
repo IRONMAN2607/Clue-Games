@@ -428,6 +428,10 @@
                 cards[1].style.top = c2Top + '%';
                 cards[1].style.left = c2Left + '%';
 
+                // Preload Laughing Cat Audio
+                const catAudio = new Audio('./Assets/laughing_cat_meme.mp3');
+                catAudio.load();
+
                 cardContainer.classList.add('wandering');
                 setTimeout(() => {
                     // Stop Super Idol Audio
@@ -435,7 +439,7 @@
                     audio.currentTime = 0;
 
                     // Start Laughing Cat Sequence
-                    const catAudio = new Audio('./Assets/laughing_cat_meme.mp3');
+                    // catAudio is already ready
                     catGif.style.display = 'block';
 
                     const moveCat = () => {
