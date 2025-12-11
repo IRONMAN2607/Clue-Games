@@ -402,9 +402,20 @@
         const catGif = document.getElementById('laughing-cat-gif');
         let isClickable = false;
 
+        // Preload Audio
+        const audio = new Audio('./Assets/super_idol_meme.mp3');
+        audio.preload = 'auto';
+
+        const catAudio = new Audio('./Assets/laughing_cat_meme.mp3');
+        catAudio.preload = 'auto';
+
         startBtn.addEventListener('click', () => {
             // Animate Button Vanish
             startBtn.classList.add('vanish');
+
+            // Preload on interaction
+            audio.load();
+            catAudio.load();
 
             // Wait for button animation then start the show
             setTimeout(() => {
@@ -412,7 +423,7 @@
                 cardContainer.style.display = 'block';
 
                 // Play Super Idol Audio
-                const audio = new Audio('./Assets/super_idol_meme.mp3');
+                audio.currentTime = 0;
                 audio.play().catch(e => console.error("Audio play failed:", e));
 
                 // Randomize spawn positions with constraints to prevent off-screen animations
@@ -428,9 +439,7 @@
                 cards[1].style.top = c2Top + '%';
                 cards[1].style.left = c2Left + '%';
 
-                // Preload Laughing Cat Audio
-                const catAudio = new Audio('./Assets/laughing_cat_meme.mp3');
-                catAudio.load();
+                // Laughing Cat Audio is already ready
 
                 cardContainer.classList.add('wandering');
                 setTimeout(() => {

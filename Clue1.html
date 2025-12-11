@@ -395,17 +395,26 @@
         const dimOverlay = document.getElementById('dim-overlay');
         let isClickable = false;
 
+        // Preload Audio
+        const audio = new Audio('./Assets/super_idol_meme.mp3');
+        audio.preload = 'auto';
+
         startBtn.addEventListener('click', () => {
             // Animate Button Vanish
             startBtn.classList.add('vanish');
+
+            // Try to load/play briefly on user interaction if needed, but 'play' inside timeout usually works if triggered by click
+            // However, browsers block async audio play without user interaction.
+            // Since this timeout is triggered *by* a click, it should generally be allowed, but preloading ensures it's ready.
+            audio.load();
 
             // Wait for button animation then start the show
             setTimeout(() => {
                 startBtn.style.display = 'none';
                 cardContainer.style.display = 'block';
 
-                // Play Audio
-                const audio = new Audio('./Assets/super_idol_meme.mp3');
+                // Play Audio Immediately
+                audio.currentTime = 0;
                 audio.play().catch(e => console.error("Audio play failed:", e));
 
                 // Randomize spawn positions with constraints to prevent off-screen animations
