@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clue 5</title>
+    <title>Birthday Surprise! - Clue 5</title>
     <style>
         /* ... existing styles ... */
         body,
@@ -196,13 +196,13 @@
         .wandering .bd-card:nth-child(1) {
             top: 10%;
             left: 10%;
-            animation: float1 5s ease-in-out forwards;
+            animation: float1 15s ease-in-out forwards;
         }
 
         .wandering .bd-card:nth-child(2) {
             top: 60%;
             left: 50%;
-            animation: float2 5s ease-in-out forwards;
+            animation: float2 15s ease-in-out forwards;
         }
 
         /* Entry Animation on Inner Card */
@@ -244,16 +244,40 @@
                 transform: translate(0, 0) rotate(0deg);
             }
 
-            25% {
-                transform: translate(80%, 50%) rotate(5deg);
+            10% {
+                transform: translate(60%, 20%) rotate(15deg);
+            }
+
+            20% {
+                transform: translate(-20%, 60%) rotate(-10deg);
+            }
+
+            30% {
+                transform: translate(70%, 90%) rotate(20deg);
+            }
+
+            40% {
+                transform: translate(-10%, 80%) rotate(-5deg);
             }
 
             50% {
-                transform: translate(20%, 150%) rotate(-5deg);
+                transform: translate(50%, -25%) rotate(10deg);
             }
 
-            75% {
-                transform: translate(100%, 20%) rotate(3deg);
+            60% {
+                transform: translate(-30%, 40%) rotate(-15deg);
+            }
+
+            70% {
+                transform: translate(75%, 75%) rotate(5deg);
+            }
+
+            80% {
+                transform: translate(10%, -10%) rotate(-8deg);
+            }
+
+            90% {
+                transform: translate(65%, 30%) rotate(12deg);
             }
 
             100% {
@@ -266,22 +290,49 @@
                 transform: translate(0, 0) rotate(0deg);
             }
 
-            25% {
-                transform: translate(-80%, -50%) rotate(-5deg);
+            10% {
+                transform: translate(-50%, -20%) rotate(-10deg);
+            }
+
+            20% {
+                transform: translate(30%, -60%) rotate(5deg);
+            }
+
+            30% {
+                transform: translate(-40%, 10%) rotate(-15deg);
+            }
+
+            40% {
+                transform: translate(50%, -40%) rotate(10deg);
             }
 
             50% {
-                transform: translate(10%, -100%) rotate(5deg);
+                transform: translate(-10%, 80%) rotate(-5deg);
             }
 
-            75% {
-                transform: translate(-50%, -20%) rotate(-3deg);
+            60% {
+                transform: translate(60%, 20%) rotate(8deg);
+            }
+
+            70% {
+                transform: translate(-70%, -50%) rotate(-12deg);
+            }
+
+            80% {
+                transform: translate(20%, 50%) rotate(6deg);
+            }
+
+            90% {
+                transform: translate(-40%, -10%) rotate(-8deg);
             }
 
             100% {
                 transform: translate(0, 0) rotate(0deg);
             }
         }
+
+
+
 
         .confetti {
             position: absolute;
@@ -340,11 +391,15 @@
         </div>
     </div>
 
+    <img id="laughing-cat-gif" src="./Assets/laughing_cat.gif" alt="Laughing Cat"
+        style="display: none; position: absolute; z-index: 200;">
+
     <script>
         const startBtn = document.getElementById('start-btn');
         const cardContainer = document.getElementById('card-container');
         const cards = document.querySelectorAll('.bd-card');
         const dimOverlay = document.getElementById('dim-overlay');
+        const catGif = document.getElementById('laughing-cat-gif');
         let isClickable = false;
 
         startBtn.addEventListener('click', () => {
@@ -355,6 +410,10 @@
             setTimeout(() => {
                 startBtn.style.display = 'none';
                 cardContainer.style.display = 'block';
+
+                // Play Super Idol Audio
+                const audio = new Audio('./Assets/super_idol_meme.mp3');
+                audio.play().catch(e => console.error("Audio play failed:", e));
 
                 // Randomize spawn positions with constraints to prevent off-screen animations
                 // Card 1 (Moves Right/Down): Needs space on Right/Bottom
@@ -371,17 +430,71 @@
 
                 cardContainer.classList.add('wandering');
                 setTimeout(() => {
-                    cardContainer.classList.remove('wandering');
-                    cardContainer.classList.add('centered');
+                    // Stop Super Idol Audio
+                    audio.pause();
+                    audio.currentTime = 0;
 
-                    // Reset styles for clean centering
-                    cards.forEach(card => {
-                        card.style.top = '';
-                        card.style.left = '';
+                    // Start Laughing Cat Sequence
+                    const catAudio = new Audio('./Assets/laughing_cat_meme.mp3');
+                    catGif.style.display = 'block';
+
+                    const moveCat = () => {
+                        // Gradually increase size based on audio progress
+                        let progress = 0;
+                        if (catAudio.duration > 0) {
+                            progress = catAudio.currentTime / catAudio.duration;
+                        }
+                        // Grow from 25% to 100%
+                        const wPercent = 25 + (progress * 75);
+                        catGif.style.width = wPercent + '%';
+
+                        // Calculate safe center position constraints to keep it inside
+                        // We use translate(-50%, -50%), so the center (top/left) must be at least w/2 away from edges.
+
+                        // Horizontal Bounds
+                        const minX = wPercent / 2;
+                        const maxX = 100 - minX;
+                        const rLeft = Math.random() * (maxX - minX) + minX;
+
+                        // Vertical Bounds
+                        // Estimating height based on square aspect ratio. 
+                        // On mobile (aspect ~0.46), hPercent is roughly half of wPercent.
+                        // If wPercent is 25%, hPercent is ~12%. Half is 6%.
+                        // Safe range: 10% to 90% seems very safe.
+                        const rTop = Math.random() * 80 + 10;
+
+                        const rRot = Math.random() * 360;
+
+                        catGif.style.top = rTop + '%';
+                        catGif.style.left = rLeft + '%';
+                        catGif.style.transform = `translate(-50%, -50%) rotate(${rRot}deg)`;
+                    };
+
+                    // Move immediately and then interval
+                    moveCat();
+                    const catInterval = setInterval(moveCat, 400); // Slower interval for better visibility? User said "teleport... 3 seconds" (originally). Now full audio. 200ms might be too strobed for long audio. 400ms is calmer. Let's stick to 200ms if user liked "teleport". User didn't complain about speed. I'll stick to 200.
+
+                    // Actually, let's keep 300ms, slightly clearer.
+
+                    catAudio.addEventListener('ended', () => {
+                        clearInterval(catInterval);
+                        catGif.style.display = 'none';
+
+                        cardContainer.classList.remove('wandering');
+                        cardContainer.classList.add('centered');
+
+                        // Reset styles for clean centering
+                        cards.forEach(card => {
+                            card.style.top = '';
+                            card.style.left = '';
+                        });
+
+                        isClickable = true;
                     });
 
-                    isClickable = true;
-                }, 5000);
+                    catAudio.play().catch(e => console.error("Cat Audio play failed:", e));
+
+                }, 15000); // 15 seconds for wandering
             }, 2000);
         });
 
@@ -441,7 +554,4 @@
     </script>
 </body>
 
-
 </html>
-
-
